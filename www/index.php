@@ -255,7 +255,7 @@ echo "</ul>";
 
 */
 
-$eleves = [
+$students = [
     [
         "prenom" => "Alice",
         "nom" => "Martin",
@@ -354,9 +354,52 @@ $eleves = [
     ],
 ];
 
-echo "<pre>";
-print_r($eleves);
-echo "</pre>";
 
-//tableau HTML je veux les colonnes :
-// Nom , Prénom , Moyenne et rang
+$newStudents = [];
+
+foreach ($students as $student){
+    $average = ($student["note1"]+$student["note2"])/2;
+    $average = round($average, 1)*10;
+    $newStudents[$average][]=$student;
+}
+
+krsort($newStudents);
+
+?>
+
+<table>
+    <thead>
+    <tr>
+        <th>Rang</th>
+        <th>Nom</th>
+        <th>Prénom</th>
+        <th>Moyenne</th>
+    </tr>
+    </thead>
+    <tbody>
+    <?php
+    $rank = 1;
+    foreach ($newStudents as $average=>$studentsWithSameAverage){
+
+        foreach ($studentsWithSameAverage as $student){
+            echo "<tr>";
+            echo "<td>".$rank."</td>";
+            echo "<td>".$student["nom"]."</td>";
+            echo "<td>".$student["prenom"]."</td>";
+            echo "<td>".($average/10)."</td>";
+            echo "</tr>";
+        }
+
+        $rank++;
+    }
+
+    ?>
+    </tbody>
+</table>
+
+
+
+
+
+
+
