@@ -1,32 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulaire HTML-PHP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
 <?php
-/*
-Tout le code doit se faire dans ce fichier PHP
+use PHPMailer\PHPMailer\PHPMailer;
+use PHPMailer\PHPMailer\Exception;
 
-Réalisez un formulaire HTML contenant :
-- firstname
-- lastname
-- email
-- pwd
-- pwdConfirm
+require '/var/www/vendor/autoload.php';
 
-Créer une table "user" dans la base de données, regardez le .env à la racine et faites un build de docker
-si vous n'arrivez pas à les récupérer pour qu'il les prenne en compte
+//Déclaration des variables
+$firstname = $lastname = $email = $pwd = $pwdConfirm = "";
+$pdo = new PDO('pgsql:host=db;port=5432;dbname=devdb', 'devuser', 'devpass');
+$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+$errors = [];
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    //Nettoyage des valeurs
+    $firstname = trim($_POST["firstname"]);
+    $lastname = trim($_POST["lastname"]);
+    $email = strtolower(trim($_POST["email"]));
+    $pwd = $_POST["pwd"];
+    $pwdConfirm = $_POST["pwdConfirm"];
 
-Lors de la validation du formulaire vous devez :
-- Nettoyer les valeurs, exemple trim sur l'email et lowercase (5 points)
-- Attention au mot de passe (3 points)
-- Attention à l'unicité de l'email (4 points)
-- Vérifier les champs sachant que le prénom et le nom sont facultatifs
-- Insérer en BDD avec PDO et des requêtes préparées si tout est OK (4 points)
-- Sinon afficher les erreurs et remettre les valeurs pertinantes dans les inputs (4 points)
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $errors[] = "Email invalide.";
+    }
 
-Le design je m'en fiche mais pas la sécurité
+    if(empty($email)) {
+        $errors[] = "L'email est obligatoire.";
+    }
 
-Bonus de 3 points si vous arrivez à envoyer un mail via un compte SMTP de votre choix
-pour valider l'adresse email en bdd
+    if (strlen($pwd) < 8) {
+        $errors[] = "Le mot de passe doit contenir au moins 8 caractères.";
+    }
 
-Pour le : 22 Octobre 2025 - 8h
-M'envoyer un lien par mail de votre repo sur y.skrzypczyk@gmail.com
-Objet du mail : TP1 - 2IW3 - Nom Prénom
-Si vous ne savez pas mettre votre code sur un repo envoyez moi une archive
-*/
+    if(empty($pwd) || empty($pwdConfirm)) {
+        $errors[] = "Le mot de passe est obligatoire.";
+    }
+
+    if ($pwd !== $pwdConfirm) {
+        $errors[] = "Les mots de passe ne correspondent pas.";
+    }
+
+    if(!preg_match('/[A-Z]/', $pwd)) {
+        $errors[] = "Le mot de passe doit contenir au moins une lettre majuscule.";
+    }
+
+    if(!preg_match('/[a-z]/', $pwd)) {
+        $errors[] = "Le mot de passe doit contenir au moins une lettre minuscule.";
+    }
+
+    if(!preg_match('/[0-9]/', $pwd)) {
+        $errors[] = "Le mot de passe doit contenir au moins un chiffre.";
+    }
+
+// Unicité de l'email
+    if (empty($errors)) {
+        $req = $pdo->prepare("SELECT id FROM users WHERE email = ?");
+        $req->execute([$email]);
+        if ($req->fetch()) {
+            $errors[] = "Cet email est déjà utilisé.";
+        }
+    }
+    // Insertion en BDD
+    if(empty($errors)) {
+        $hashedPwd = password_hash($pwd, PASSWORD_BCRYPT);
+        $req= $pdo->prepare("INSERT INTO users (firstname, lastname, email, password) VALUES (?, ?, ?, ?)");
+        $req->execute([$firstname,$lastname, $email, $hashedPwd]);
+    }
+
+// Après l'insertion en BDD, ajoutez :
+    if(empty($errors)) {
+        // Générer un token de validation
+        $token = bin2hex(random_bytes(32));
+
+        // Mettre à jour l'utilisateur avec le token
+        $req = $pdo->prepare("UPDATE users SET validation_token = ?, email_verified = FALSE WHERE email = ?");
+        $req->execute([$token, $email]);
+
+        // Envoyer l'email avec PHPMailer
+        try {
+            $mail = new PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host = 'smtp-relay.brevo.com';
+            $mail->SMTPAuth = true;
+            $mail->Username = '9874d5001@smtp-brevo.com';
+            $mail->Password = 'kOChRB6wFdW4IKrZ';
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->Port = 587;
+            $mail->setFrom('9874d5001@smtp-brevo.com', 'TP1');
+            $mail->addAddress($email);
+            $mail->Subject = 'Validez votre compte';
+
+            $validationLink = "http://localhost/validate.php?token=" . $token;
+            $mail->Body = "Cliquez ici pour valider votre compte : <a href='$validationLink'>$validationLink</a>";
+
+            $mail->send();
+            echo "<p class='success'>Email de validation envoyé !</p>";
+        } catch (Exception $e) {
+            echo "<p class='error'>Erreur lors de l'envoi de l'email : {$mail->ErrorInfo}</p>";
+        }
+    }
+
+    // Affichage des erreurs
+    if(!empty($errors)) {
+        foreach ($errors as $error) {
+            echo "<p class='error'>$error</p>";
+        }
+    } else {
+        if($_SERVER["REQUEST_METHOD"] == "POST"){
+            echo "<p class='success'>Inscription réussie !</p>";
+            $firstname = $lastname = $email = "";
+        }
+    }
+}
+?>
+
+<body>
+<form action="" method="post">
+    <label for="firstname">Prénom :</label>
+    <input type="text" id="firstname" name="firstname" value="<?= htmlspecialchars($firstname) ?>">
+
+    <label for="lastname">Nom :</label>
+    <input type="text" id="lastname" name="lastname" value="<?= htmlspecialchars($lastname) ?>">
+
+    <label for="email">Email :</label>
+    <input type="email" id="email" name="email" value="<?= htmlspecialchars($email) ?>" required>
+
+    <label for="pwd">Mot de passe :</label>
+    <input type="password" id="pwd" name="pwd" required>
+
+    <label for="pwdConfirm">Confirmer le mot de passe :</label>
+    <input type="password" id="pwdConfirm" name="pwdConfirm" required>
+
+    <input type="submit" value="Valider">
+</form>
+</html>

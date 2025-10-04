@@ -10,6 +10,7 @@ services:
       - "8080:80"             # Accès HTTP à Apache -> http://localhost:8080
     volumes:
       - ./www:/var/www/html:cached  # ton code PHP (www/)
+      - ./vendor:/var/www/vendor:cached  # ton code PHP (vendor/)
       - ./php.ini:/usr/local/etc/php/conf.d/custom.ini:ro
     environment:
       - APACHE_LOG_DIR=/var/log/apache2
