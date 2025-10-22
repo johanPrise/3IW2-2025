@@ -15,6 +15,7 @@ services:
       - APACHE_LOG_DIR=/var/log/apache2
     depends_on:
       - db
+      - mailpit
 
   db:
     image: postgres:15-alpine
@@ -42,6 +43,16 @@ services:
       - pgadmin-data:/var/lib/pgadmin
     depends_on:
       - db
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    restart: unless-stopped
+    ports:
+      - "8025:8025"           # Interface web -> http://localhost:8025
+      - "1025:1025"           # Port SMTP
+    environment:
+      MP_MAX_MESSAGES: 5000
 
 volumes:
   pgdata:
