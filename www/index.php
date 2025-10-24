@@ -9,4 +9,11 @@
  * http://localhost:8080/article/312 -> index.php
  */
 
-echo "Welcome";
+//Faire en sorte de créer l'instance du controller associé à l'URL
+//Appeler l'action associée à l'URL
+
+//ex : /contact
+//Appel du controller Base
+//Action contact
+
+
