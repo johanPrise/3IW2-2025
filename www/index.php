@@ -16,4 +16,11 @@
 //Appel du controller Base
 //Action contact
 
+/*
+ *
+ * Dans le cas ou l'url ne correspond à aucune route dans routes.yml
+ * Afficher une veritable pas 404
+ *
+ */
+
 
