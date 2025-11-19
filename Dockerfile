@@ -1,19 +1,17 @@
 # Utilise l'image officielle PHP + Apache
 FROM php:8.2-apache
 
-
 # Installer les dépendances nécessaires pour PostgreSQL et activer modules
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
+    libyaml-dev \
     unzip \
     git \
-    libyaml-dev \
-    && pecl install yamL \
     && docker-php-ext-install pdo pdo_pgsql pgsql \
+    && pecl install yaml \
     && docker-php-ext-enable yaml \
     && a2enmod rewrite \
     && rm -rf /var/lib/apt/lists/*
-
 
 # Copier un php.ini personnalisé si besoin (monté via docker-compose)
 # WORKDIR /var/www/html

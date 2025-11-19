@@ -1,6 +1,10 @@
-RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(.*)$ /index.php [L,QSA]
-
-
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Ne pas rediriger les fichiers qui existent réellement
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    
+    # Rediriger tout vers index.php
+    RewriteRule ^(.*)$ index.php [QSA,L]
+</IfModule>

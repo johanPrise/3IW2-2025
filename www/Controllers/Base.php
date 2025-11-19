@@ -1,25 +1,18 @@
 <?php
-namespace App\Controller;
 
-use App\Helper\Errors;
+namespace Controllers;
 
 class Base
 {
+
     public function index(): void
     {
-        $errors = new Errors();
-        $errors->helloWorld();
+        echo "Base index";
     }
 
     public function contact(): void
     {
         echo "Base contact";
     }
-
-    public function portfolio(): void
-    {
-        echo "Base portfolio";
-    }
-
 
 }
