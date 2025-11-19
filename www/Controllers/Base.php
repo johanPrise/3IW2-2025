@@ -1,10 +1,14 @@
 <?php
 namespace App\Controller;
+
+use App\Helper\Errors;
+
 class Base
 {
     public function index(): void
     {
-        echo "Base index";
+        $errors = new Errors();
+        $errors->helloWorld();
     }
 
     public function contact(): void

@@ -1,5 +1,6 @@
 <?php
 namespace App;
+
 /*
  * Faire en sorte que toutes les URLS possibles
  * pointent sur ce fichier index.php
@@ -22,6 +23,22 @@ namespace App;
  * Afficher une veritable pas 404
  *
  */
+
+
+
+
+spl_autoload_register("App\\calledIfInstanceWithoutClass");
+function calledIfInstanceWithoutClass($class){
+    //Créer le code permettant d'aller chercher dans
+    //le dossier Helpers la classe qui a engendré une erreur
+    echo "Le problème vient de l'instance de la classe ".$class;
+}
+
+
+
+
+
+
 $uri = $_SERVER["REQUEST_URI"];
 $uriExploded = explode("?",$uri);
 if(is_array($uriExploded)){
@@ -57,6 +74,7 @@ if(!file_exists("Controllers/".$controller.".php")){
 include "Controllers/".$controller.".php";
 
 //Est ce que la class existe ?
+$controller = "App\\Controller\\".$controller;
 if(!class_exists($controller)){
     die("Erreur, la class controller ".$controller." n'existe pas");
 }
