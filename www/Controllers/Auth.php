@@ -1,5 +1,5 @@
 <?php
-
+namespace App\Controller;
 class Auth
 {
     public function login(): void

@@ -2,7 +2,15 @@
   controller: Base
   action: index
 
+/mon-portfolio:
+  controller: Base
+  action: portfolio
+
 /contact:
+  controller: Base
+  action: contact
+
+/SAV:
   controller: Base
   action: contact
 
